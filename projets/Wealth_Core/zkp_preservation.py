@@ -10,7 +10,7 @@ class SiphonProtocol:
         remaining_amount = amount - siphon_amount
         return remaining_amount, siphon_amount
 
-class ZeroKnowledgeLedger:
+class EternalLedger:
     def __init__(self, ledger_path, cold_storage_path):
         self.ledger_path = ledger_path
         self.cold_storage_path = cold_storage_path
@@ -72,6 +72,17 @@ class ZeroKnowledgeLedger:
         print(f"[ZKP Engine] Transaction sealed: {tx_proof[:12]}... | Siphoned: {siphon}")
         return tx_proof
 
+    def verify_integrity(self):
+        """Verifies the integrity of the ledger by re-calculating proofs."""
+        with open(self.ledger_path, 'r') as f:
+            ledger_data = json.load(f)
+        
+        for entry in ledger_data:
+            proof, _ = self._generate_proof(entry['data'], entry['salt'])
+            if proof != entry['commitment']:
+                return False
+        return True
+
     def _append_to_json(self, path, entry):
         with open(path, 'r+') as f:
             data = json.load(f)
@@ -79,6 +90,9 @@ class ZeroKnowledgeLedger:
             f.seek(0)
             json.dump(data, f, indent=4)
             f.truncate()
+
+# Alias for backward compatibility or as per alternative naming in ticket
+ZeroKnowledgeLedger = EternalLedger
 
 if __name__ == "__main__":
     LEDGER_PATH = "/home/engine/project/projets/Wealth_Core/eternal_ledger.json"

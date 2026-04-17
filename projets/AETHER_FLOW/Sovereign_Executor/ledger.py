@@ -22,7 +22,7 @@ class GrowthLedger:
 
     def log_execution(self, action_id, result, strategy="UNKNOWN"):
         timestamp = datetime.datetime.now().isoformat()
-        log_dir = "/home/engine/project/AETHER_FLOW/Intelligence_Report"
+        log_dir = "/home/engine/project/projets/AETHER_FLOW/Intelligence_Report"
         os.makedirs(log_dir, exist_ok=True)
         log_path = os.path.join(log_dir, "growth_log.txt")
         
