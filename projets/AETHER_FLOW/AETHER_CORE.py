@@ -1,7 +1,14 @@
 import asyncio
 import sys
-sys.path.append("/home/engine/nectar_divino")
-sys.path.append("/home/engine/AETHER_FLOW")
+import os
+
+# Set base paths
+base_path = "/home/engine/project"
+aether_path = os.path.join(base_path, "projets/AETHER_FLOW")
+
+sys.path.append(base_path)
+sys.path.append(aether_path)
+
 from Market_Nexus.scanner import scanner
 from Value_Hyper_Engine.distiller import distiller
 from Sovereign_Executor.ledger import ledger
