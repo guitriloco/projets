@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Terminal, ShieldAlert, Cpu, Database, Send } from "lucide-react";
+import { executeDirective } from "@/lib/api";
 
 export const CommandCenter = () => {
   const [logs, setLogs] = useState<string[]>([
@@ -10,8 +11,18 @@ export const CommandCenter = () => {
     "READY_FOR_DIRECTIVES"
   ]);
 
-  const executeDirective = (directive: string) => {
-    setLogs(prev => [...prev.slice(-10), `> EXECUTING_${directive}...`, `[SUCCESS] ${directive}_COMPLETE`]);
+  const runDirective = async (directive: string) => {
+    setLogs(prev => [...prev.slice(-10), \`> EXECUTING_\${directive}...\`]);
+    try {
+      const resp = await executeDirective(directive);
+      if (resp.ok) {
+        setLogs(prev => [...prev, \`[SUCCESS] \${directive}_COMPLETE\`]);
+      } else {
+        setLogs(prev => [...prev, \`[ERROR] \${directive}_FAILED: \${resp.statusText}\`]);
+      }
+    } catch (e: any) {
+      setLogs(prev => [...prev, \`[ERROR] \${directive}_CONNECTION_FAILED: \${e.message}\`]);
+    }
   };
 
   return (
@@ -30,28 +41,28 @@ export const CommandCenter = () => {
 
       <div className="grid grid-cols-2 gap-4 mb-8">
         <button 
-          onClick={() => executeDirective('ACTIVATE_SPECTRE')}
+          onClick={() => runDirective('ACTIVATE_SPECTRE')}
           className="p-4 bg-zinc-900 border border-luxe-gold/30 hover:bg-luxe-gold/10 hover:border-luxe-gold text-luxe-gold text-[10px] font-mono tracking-widest uppercase transition-all flex items-center justify-center space-x-3"
         >
           <Cpu className="w-4 h-4" />
           <span>Activate Spectre</span>
         </button>
         <button 
-          onClick={() => executeDirective('SYNC_ALL_NODES')}
+          onClick={() => runDirective('SYNC_ALL_NODES')}
           className="p-4 bg-zinc-900 border border-zinc-800 hover:bg-white/5 hover:border-white text-white text-[10px] font-mono tracking-widest uppercase transition-all flex items-center justify-center space-x-3"
         >
           <Database className="w-4 h-4" />
           <span>Sync All Nodes</span>
         </button>
         <button 
-          onClick={() => executeDirective('EXECUTE_PURGE')}
+          onClick={() => runDirective('EXECUTE_PURGE')}
           className="p-4 bg-zinc-900 border border-luxe-ruby/30 hover:bg-luxe-ruby/10 hover:border-luxe-ruby text-luxe-ruby text-[10px] font-mono tracking-widest uppercase transition-all flex items-center justify-center space-x-3"
         >
           <ShieldAlert className="w-4 h-4" />
           <span>Execute Purge</span>
         </button>
         <button 
-          onClick={() => executeDirective('REBOOT_INTERFACE')}
+          onClick={() => runDirective('REBOOT_INTERFACE')}
           className="p-4 bg-zinc-900 border border-zinc-800 hover:bg-white/5 hover:border-white text-white text-[10px] font-mono tracking-widest uppercase transition-all flex items-center justify-center space-x-3"
         >
           <Terminal className="w-4 h-4" />

@@ -1,17 +1,27 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Cpu, Zap, Activity, Info } from "lucide-react";
-
-const nodes = [
-  { name: "Nexus", status: "STABLE", cpu: 12, iops: 4500, latency: 2, thermal: 32 },
-  { name: "Shadow", status: "OPTIMIZED", cpu: 8, iops: 8200, latency: 1, thermal: 28 },
-  { name: "Void", status: "STANDBY", cpu: 1, iops: 0, latency: 0, thermal: 24 },
-  { name: "Nebula", status: "STABLE", cpu: 45, iops: 12400, latency: 5, thermal: 42 },
-];
+import { fetchNodes } from "@/lib/api";
 
 export const NodeHealth = () => {
+  const [nodes, setNodes] = useState<any[]>([]);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateNodes = async () => {
+      try {
+        const data = await fetchNodes();
+        setNodes(data);
+      } catch (e) {
+        console.error("Failed to fetch nodes", e);
+      }
+    };
+
+    updateNodes();
+    const interval = setInterval(updateNodes, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="glass-morphism p-8 rounded-none border-zinc-900/50 h-full">
@@ -27,54 +37,56 @@ export const NodeHealth = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        {nodes.length === 0 && (
+          <div className="col-span-2 text-center py-10 text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
+            Scanning for active nodes...
+          </div>
+        )}
         {nodes.map((node) => (
           <motion.div
-            key={node.name}
+            key={node.node_id}
             whileHover={{ scale: 1.02 }}
-            onMouseEnter={() => setHoveredNode(node.name)}
+            onMouseEnter={() => setHoveredNode(node.node_id)}
             onMouseLeave={() => setHoveredNode(null)}
             className="p-6 bg-zinc-950 border border-zinc-900 relative group cursor-crosshair overflow-hidden"
           >
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-sm font-bold tracking-widest uppercase text-white">
-                {node.name}_NODE
+                {node.node_id}_NODE
               </h3>
               <div className="w-2 h-2 rounded-full bg-luxe-gold" />
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-end">
-                <span className="text-[10px] text-zinc-600 font-mono uppercase">CPU LOAD</span>
-                <div className="flex-1 mx-4 h-[1px] bg-zinc-900 overflow-hidden relative">
-                   <motion.div 
-                    animate={{ x: [-100, 100] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 w-1/4 bg-luxe-gold/30"
-                   />
-                </div>
-                <span className="text-xs font-mono text-luxe-gold">{node.cpu}%</span>
+                <span className="text-[10px] text-zinc-600 font-mono uppercase">STATUS</span>
+                <span className="text-xs font-mono text-luxe-gold">{node.status}</span>
               </div>
               
               <div className="flex justify-between items-end">
-                <span className="text-[10px] text-zinc-600 font-mono uppercase">IOPS</span>
-                <span className="text-xs font-mono text-zinc-400">{node.iops.toLocaleString()}</span>
+                <span className="text-[10px] text-zinc-600 font-mono uppercase">IP</span>
+                <span className="text-xs font-mono text-zinc-400">{node.ip}</span>
               </div>
 
               <div className="flex justify-between items-end">
-                <span className="text-[10px] text-zinc-600 font-mono uppercase">LATENCY</span>
-                <span className="text-xs font-mono text-luxe-emerald">{node.latency}ms</span>
+                <span className="text-[10px] text-zinc-600 font-mono uppercase">LAST SEEN</span>
+                <span className="text-xs font-mono text-luxe-emerald">{new Date(node.last_seen * 1000).toLocaleTimeString()}</span>
               </div>
             </div>
 
             {/* Hover Detail Overlay */}
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: hoveredNode === node.name ? 1 : 0 }}
+              animate={{ opacity: hoveredNode === node.node_id ? 1 : 0 }}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col justify-center items-center pointer-events-none p-4 text-center"
             >
               <Info className="w-6 h-6 text-luxe-gold mb-2" />
-              <span className="text-[10px] font-mono text-luxe-gold uppercase tracking-[0.2em] mb-1">Thermal: {node.thermal}°C</span>
-              <span className="text-[10px] font-mono text-luxe-emerald uppercase tracking-[0.2em]">{node.status}</span>
+              <span className="text-[10px] font-mono text-luxe-gold uppercase tracking-[0.2em] mb-1">{node.hostname}</span>
+              <div className="text-[8px] font-mono text-zinc-500 uppercase">
+                {Object.entries(node.capabilities || {}).map(([k, v]: any) => (
+                  <div key={k}>{k}: {v}</div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         ))}

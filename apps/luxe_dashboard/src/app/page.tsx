@@ -5,6 +5,7 @@ import { NeuralMesh } from "@/components/NeuralMesh";
 import { StatCard } from "@/components/StatCard";
 import { GlobalLedger } from "@/components/GlobalLedger";
 import { NodeHealth } from "@/components/NodeHealth";
+import { NovObservations } from "@/components/NovObservations";
 import { SpectreYield } from "@/components/SpectreYield";
 import { CommandCenter } from "@/components/CommandCenter";
 import { 
@@ -62,7 +63,10 @@ export default function Dashboard() {
             <SpectreYield />
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               <NodeHealth />
-              <CommandCenter />
+              <div className="space-y-8">
+                <NovObservations />
+                <CommandCenter />
+              </div>
             </div>
           </div>
           

@@ -9,41 +9,36 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-interface Transaction {
-  id: string;
-  hash: string;
-  value: string;
-  status: "APPROVED" | "SYNCING" | "VOID";
-  timestamp: string;
-}
-
 export const GlobalLedger = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const generateTx = () => {
-      const statuses: Transaction["status"][] = ["APPROVED", "SYNCING", "VOID"];
-      const newTx: Transaction = {
-        id: Math.random().toString(36).substring(2, 9),
-        hash: "0x" + Math.random().toString(16).substring(2, 40),
-        value: (Math.random() * 10).toFixed(4) + " SPECTRE",
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        timestamp: new Date().toLocaleTimeString(),
-      };
-      setTransactions((prev) => [newTx, ...prev.slice(0, 9)]);
+    const fetchTelemetry = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/telemetry/recent");
+        if (response.ok) {
+          const data = await response.json();
+          // Transform telemetry into "ledger entries"
+          const mapped = data.reverse().map((t: any, i: number) => ({
+            id: (1000 + i).toString(),
+            hash: "0x" + Math.random().toString(16).substring(2, 40),
+            value: t.name,
+            status: t.rating >= 4 ? "APPROVED" : "SYNCING",
+            timestamp: new Date(t.timestamp * 1000).toLocaleTimeString()
+          }));
+          setTransactions(mapped);
+          setIsConnected(true);
+        }
+      } catch (e) {
+        console.error("Failed to fetch telemetry", e);
+        setIsConnected(false);
+      }
     };
 
-    generateTx();
-    const interval = setInterval(generateTx, 3000);
-    
-    // Simulate connection attempt
-    const timer = setTimeout(() => setIsConnected(true), 2000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timer);
-    };
+    fetchTelemetry();
+    const interval = setInterval(fetchTelemetry, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
