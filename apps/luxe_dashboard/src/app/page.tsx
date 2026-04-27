@@ -8,6 +8,7 @@ import { NodeHealth } from "@/components/NodeHealth";
 import { NovObservations } from "@/components/NovObservations";
 import { SpectreYield } from "@/components/SpectreYield";
 import { CommandCenter } from "@/components/CommandCenter";
+import { TelemetryPulse } from "@/components/TelemetryPulse";
 import { 
   TrendingUp, 
   Server, 
@@ -70,8 +71,9 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="lg:col-span-4 h-full">
+          <div className="lg:col-span-4 h-full space-y-8">
             <GlobalLedger />
+            <TelemetryPulse />
           </div>
         </div>
       </div>

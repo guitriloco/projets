@@ -4,40 +4,47 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Hash, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { fetchZenithSignals } from "@/lib/api";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+interface Signal {
+  id: string;
+  source: string;
+  insight: string;
+  timestamp: string;
+  metric: string;
+}
+
 export const GlobalLedger = () => {
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [signals, setSignals] = useState<Signal[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const fetchTelemetry = async () => {
+    const updateSignals = async () => {
       try {
-        const response = await fetch("http://localhost:8000/telemetry/recent");
-        if (response.ok) {
-          const data = await response.json();
-          // Transform telemetry into "ledger entries"
-          const mapped = data.reverse().map((t: any, i: number) => ({
-            id: (1000 + i).toString(),
-            hash: "0x" + Math.random().toString(16).substring(2, 40),
-            value: t.name,
-            status: t.rating >= 4 ? "APPROVED" : "SYNCING",
-            timestamp: new Date(t.timestamp * 1000).toLocaleTimeString()
+        const data = await fetchZenithSignals();
+        if (data && data.length > 0) {
+          const newSignals = data.map((s: any) => ({
+            id: Math.random().toString(36).substring(2, 7),
+            source: s.source || "ZENITH",
+            insight: s.insight,
+            metric: s.efficiency_metric ? (s.efficiency_metric * 100).toFixed(2) + "%" : "N/A",
+            timestamp: new Date(s.timestamp * 1000).toLocaleTimeString(),
           }));
-          setTransactions(mapped);
+          setSignals((prev) => [...newSignals, ...prev].slice(0, 20));
           setIsConnected(true);
         }
       } catch (e) {
-        console.error("Failed to fetch telemetry", e);
+        console.error("Failed to fetch signals", e);
         setIsConnected(false);
       }
     };
 
-    fetchTelemetry();
-    const interval = setInterval(fetchTelemetry, 3000);
+    updateSignals();
+    const interval = setInterval(updateSignals, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -46,10 +53,10 @@ export const GlobalLedger = () => {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-xl font-light tracking-[0.2em] uppercase text-white mb-1">
-            Global Ledger Feed
+            Zenith Signal Feed
           </h2>
           <p className="text-[10px] tracking-widest text-zinc-500 font-mono uppercase">
-            Mirror Protocol V5.2 // Live Audit
+            Data Mesh -> Wraith Interlace
           </p>
         </div>
         <div className="flex items-center space-x-2 bg-zinc-900 px-4 py-2 border border-zinc-800">
@@ -58,51 +65,45 @@ export const GlobalLedger = () => {
             isConnected ? "bg-luxe-emerald" : "bg-luxe-ruby"
           )} />
           <span className="text-[10px] font-mono text-zinc-400">
-            {isConnected ? "SYNCED" : "CONNECTING..."}
+            {isConnected ? "LIVE" : "DISCONNECTED"}
           </span>
         </div>
       </div>
 
       <div className="space-y-3 font-mono">
         <div className="grid grid-cols-12 text-[10px] text-zinc-600 uppercase pb-4 border-b border-zinc-900 font-bold tracking-widest">
-          <div className="col-span-2">ID</div>
-          <div className="col-span-5">HASH</div>
-          <div className="col-span-2 text-right">VALUE</div>
-          <div className="col-span-3 text-right">STATUS</div>
+          <div className="col-span-2">SOURCE</div>
+          <div className="col-span-6">INSIGHT</div>
+          <div className="col-span-2 text-right">METRIC</div>
+          <div className="col-span-2 text-right">TIME</div>
         </div>
 
         <div className="relative overflow-hidden min-h-[400px]">
           <AnimatePresence initial={false}>
-            {transactions.map((tx) => (
+            {signals.length > 0 ? signals.map((sig, i) => (
               <motion.div
-                key={tx.id}
+                key={sig.id + i}
                 initial={{ x: -10, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 10, opacity: 0 }}
-                className="grid grid-cols-12 text-xs py-4 border-b border-zinc-900 group hover:bg-zinc-900/40 transition-colors"
+                className="grid grid-cols-12 text-[10px] py-4 border-b border-zinc-900 group hover:bg-zinc-900/40 transition-colors"
               >
-                <div className="col-span-2 text-zinc-400">#{tx.id}</div>
-                <div className="col-span-5 text-zinc-500 truncate group-hover:text-luxe-gold transition-colors pr-4">
-                  {tx.hash}
+                <div className="col-span-2 text-luxe-gold">{sig.source}</div>
+                <div className="col-span-6 text-zinc-400 truncate group-hover:text-white transition-colors pr-4">
+                  {sig.insight}
                 </div>
-                <div className="col-span-2 text-right text-white font-medium">
-                  {tx.value}
+                <div className="col-span-2 text-right text-luxe-emerald font-medium">
+                  {sig.metric}
                 </div>
-                <div className="col-span-3 text-right">
-                  <span
-                    className={
-                      tx.status === "APPROVED"
-                        ? "text-luxe-emerald"
-                        : tx.status === "SYNCING"
-                        ? "text-luxe-gold"
-                        : "text-luxe-ruby"
-                    }
-                  >
-                    {tx.status}
-                  </span>
+                <div className="col-span-2 text-right text-zinc-600">
+                  {sig.timestamp}
                 </div>
               </motion.div>
-            ))}
+            )) : (
+              <div className="py-20 text-center text-zinc-800 font-mono text-[10px] uppercase tracking-[0.3em]">
+                Awaiting Data Stream...
+              </div>
+            )}
           </AnimatePresence>
         </div>
       </div>
