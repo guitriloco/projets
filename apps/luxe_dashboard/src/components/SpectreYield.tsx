@@ -13,14 +13,21 @@ export const SpectreYield = () => {
     const updateYield = async () => {
       try {
         const history = await fetchYieldHistory();
-        // Transform the data for the chart
-        const chartData = history.map((h: any) => ({
-          time: new Date(h.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          yield: h.yield_roi * 5, // Scale for visibility
-          target: 4.5,
-          nodeLoad: h.performance * 5000
-        }));
-        setData(chartData);
+        
+        // Group data by timestamp to align regional reports
+        const grouped: any = {};
+        history.forEach((h: any) => {
+          const time = new Date(h.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          if (!grouped[time]) {
+            grouped[time] = { time, ALPHA: 0, BETA: 0, GAMMA: 0, GLOBAL: 0, TOTAL: 0 };
+          }
+          grouped[time][h.region] = h.yield_roi * 5;
+          if (h.region !== 'GLOBAL') {
+            grouped[time].TOTAL += h.yield_roi * 5;
+          }
+        });
+        
+        setData(Object.values(grouped));
       } catch (e) {
         console.error("Failed to fetch yield history", e);
       }
@@ -81,18 +88,36 @@ export const SpectreYield = () => {
             />
             <Area 
               type="monotone" 
-              dataKey="yield" 
+              dataKey="TOTAL" 
               stroke="#D4AF37" 
               fillOpacity={1} 
               fill="url(#yieldGradient)" 
-              strokeWidth={2}
+              strokeWidth={3}
+              name="TRINITY TOTAL"
             />
             <Line 
               type="monotone" 
-              dataKey="target" 
-              stroke="#52525B" 
-              strokeDasharray="5 5" 
+              dataKey="ALPHA" 
+              stroke="#3B82F6" 
               dot={false}
+              strokeWidth={1}
+              name="ALPHA CLUSTER"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="BETA" 
+              stroke="#10B981" 
+              dot={false}
+              strokeWidth={1}
+              name="BETA CLUSTER"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="GAMMA" 
+              stroke="#8B5CF6" 
+              dot={false}
+              strokeWidth={1}
+              name="GAMMA CLUSTER"
             />
           </ComposedChart>
         </ResponsiveContainer>
