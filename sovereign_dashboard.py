@@ -4,35 +4,46 @@ import httpx
 import asyncio
 
 async def monitor_sovereignty():
-    nodes = {
-        "HUB": "http://localhost:8000",
-        "OBSERVER": "http://localhost:8001",
-        "YIELD": "http://localhost:8002",
-        "VAULT": "http://localhost:8003",
-        "REX": "http://localhost:8004",
-        "SUPRA": "http://localhost:8005"
+    clusters = {
+        "ALPHA": "http://localhost:8101",
+        "BETA": "http://localhost:8102",
+        "GAMMA": "http://localhost:8103"
     }
     
-    print("--- ⚜️ SOVEREIGN DASHBOARD v2.0 (Aether-Sync) ---")
+    print("--- ⚜️ SOVEREIGN DASHBOARD v3.0 (Global Lattice) ---")
     
     async with httpx.AsyncClient() as client:
-        for name, url in nodes.items():
+        for name, url in clusters.items():
+            print(f"\n[CLUSTER] {name} ({url})")
+            # Heartbeat Pulse
             try:
-                start = time.time()
-                resp = await client.get(url, timeout=1.0)
-                latency = (time.time() - start) * 1000
-                status = "ACTIVE" if resp.status_code < 500 else "ERROR"
-                print(f"[NODE] {name:10} | Status: {status:7} | Latency: {latency:6.2f}ms | Endpoint: {url}")
+                hb_resp = await client.get(f"{url}/omni-pulse/heartbeat", timeout=2.0)
+                hb_data = hb_resp.json()
+                print(f"  [PULSE] Heartbeat: {hb_data['pulse_id']} | Total Latency: {hb_data['total_latency_ms']:.2f}ms")
+            except Exception as e:
+                print(f"  [PULSE] Heartbeat Failed: {e}")
+
+            # Cluster Info
+            try:
+                info_resp = await client.get(f"{url}/cluster/info", timeout=1.0)
+                info = info_resp.json()
+                print(f"  [INFO] Role: {info['role']} | Region: {info['region']}")
             except Exception:
-                print(f"[NODE] {name:10} | Status: DOWN    | Latency: N/A      | Endpoint: {url}")
-    
-    print("\n[OMNI-PULSE] System Frequency: STABLE")
-    print("[AETHER-SYNC] Bridge State: OPERATIONAL")
-    
-    print("\n[FORGE] Integration History (Last 5 Pulses):")
-    # This would ideally read from a log file or DB
-    print("- PULSE-1777923306: SUCCESS | Yield: HIGH | Vault ID: c69a...")
-    print("- PULSE-1777923568: SUCCESS | Yield: HIGH | Vault ID: 4fbf...")
+                print(f"  [INFO] Status: OFFLINE")
+
+        # Global Lattice Pulse
+        print("\n[GLOBAL] Initiating Cross-Cluster Sync Pulse...")
+        try:
+            # Trigger pulse in Alpha, which syncs with others
+            pulse_resp = await client.post(f"{clusters['ALPHA']}/omni-pulse/regional?seed_objective=GLOBAL_LATTICE_SYNC", timeout=10.0)
+            p_data = pulse_resp.json()
+            print(f"[GLOBAL] Sync Result: {p_data['status']} | Alpha Enhancement: {p_data.get('alpha_enhancement', {}).get('status')}")
+            print(f"[GLOBAL] Lattice Sync: {p_data.get('lattice_sync', 'N/A')}")
+        except Exception as e:
+            print(f"[GLOBAL] Sync Failed: {e}")
+
+    print("\n[OMNI-PULSE] Global System Frequency: STABLE")
+    print("[LATTICE] State: GEOMETRIC DOMINANCE")
 
 if __name__ == "__main__":
     asyncio.run(monitor_sovereignty())
