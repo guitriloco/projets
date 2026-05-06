@@ -13,6 +13,12 @@ export async function fetchZenithSignals() {
   return response.json();
 }
 
+export async function fetchYieldHistory() {
+  const response = await fetch(`${API_BASE_URL}/yield/history`);
+  if (!response.ok) throw new Error("Failed to fetch yield history");
+  return response.json();
+}
+
 export async function executeDirective(directive: string, payload: any = {}) {
   // Mapping directives to API calls
   if (directive === 'ACTIVATE_SPECTRE') {

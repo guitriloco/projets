@@ -1,21 +1,36 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   ComposedChart, Line, Bar 
 } from "recharts";
-
-const data = [
-  { time: "00:00", yield: 4.2, target: 4.0, nodeLoad: 2400 },
-  { time: "04:00", yield: 4.8, target: 4.1, nodeLoad: 3200 },
-  { time: "08:00", yield: 5.1, target: 4.2, nodeLoad: 4100 },
-  { time: "12:00", yield: 4.7, target: 4.3, nodeLoad: 3800 },
-  { time: "16:00", yield: 5.9, target: 4.4, nodeLoad: 5200 },
-  { time: "20:00", yield: 6.4, target: 4.5, nodeLoad: 6100 },
-  { time: "23:59", yield: 6.8, target: 4.6, nodeLoad: 6800 },
-];
+import { fetchYieldHistory } from "@/lib/api";
 
 export const SpectreYield = () => {
+  const [data, setData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const updateYield = async () => {
+      try {
+        const history = await fetchYieldHistory();
+        // Transform the data for the chart
+        const chartData = history.map((h: any) => ({
+          time: new Date(h.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          yield: h.yield_roi * 5, // Scale for visibility
+          target: 4.5,
+          nodeLoad: h.performance * 5000
+        }));
+        setData(chartData);
+      } catch (e) {
+        console.error("Failed to fetch yield history", e);
+      }
+    };
+
+    updateYield();
+    const interval = setInterval(updateYield, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="glass-morphism p-8 rounded-none border-zinc-900/50 h-full">
       <div className="flex justify-between items-end mb-10">
