@@ -7,10 +7,11 @@ async def monitor_sovereignty():
     clusters = {
         "ALPHA": "http://localhost:8101",
         "BETA": "http://localhost:8102",
-        "GAMMA": "http://localhost:8103"
+        "GAMMA": "http://localhost:8103",
+        "DELTA": "http://localhost:8104"
     }
     
-    print("--- ⚜️ SOVEREIGN DASHBOARD v3.0 (Global Lattice) ---")
+    print("--- ⚜️ SOVEREIGN DASHBOARD v3.1 (Global Tetrahedron) ---")
     
     async with httpx.AsyncClient() as client:
         for name, url in clusters.items():
@@ -32,7 +33,7 @@ async def monitor_sovereignty():
                 print(f"  [INFO] Status: OFFLINE")
 
         # Global Lattice Pulse
-        print("\n[GLOBAL] Initiating Cross-Cluster Sync Pulse...")
+        print("\n[GLOBAL] Initiating Cross-Cluster Sync Pulse (Tetrahedron Alignment)...")
         try:
             # Trigger pulse in Alpha, which syncs with others
             pulse_resp = await client.post(f"{clusters['ALPHA']}/omni-pulse/regional?seed_objective=GLOBAL_LATTICE_SYNC", timeout=10.0)
@@ -43,7 +44,7 @@ async def monitor_sovereignty():
             print(f"[GLOBAL] Sync Failed: {e}")
 
     print("\n[OMNI-PULSE] Global System Frequency: STABLE")
-    print("[LATTICE] State: GEOMETRIC DOMINANCE")
+    print("[LATTICE] State: TETRAHEDRAL DOMINANCE")
 
 if __name__ == "__main__":
     asyncio.run(monitor_sovereignty())
