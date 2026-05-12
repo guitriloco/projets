@@ -19,11 +19,16 @@ export const SpectreYield = () => {
         history.forEach((h: any) => {
           const time = new Date(h.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           if (!grouped[time]) {
-            grouped[time] = { time, ALPHA: 0, BETA: 0, GAMMA: 0, GLOBAL: 0, TOTAL: 0 };
+            grouped[time] = { time, ALPHA: 0, BETA: 0, GAMMA: 0, DELTA: 0, TOTAL: 0, BARYCENTER: 0 };
           }
-          grouped[time][h.region] = h.yield_roi * 5;
-          if (h.region !== 'GLOBAL') {
-            grouped[time].TOTAL += h.yield_roi * 5;
+          if (h.region) {
+            grouped[time][h.region] = h.yield_roi * 5;
+            if (h.region !== 'GLOBAL') {
+              grouped[time].TOTAL += h.yield_roi * 5;
+            }
+          }
+          if (h.vertex === 'VIRTUAL_BARYCENTER') {
+            grouped[time].BARYCENTER = h.aggregated_roi * 5;
           }
         });
         
@@ -88,12 +93,12 @@ export const SpectreYield = () => {
             />
             <Area 
               type="monotone" 
-              dataKey="TOTAL" 
-              stroke="#D4AF37" 
+              dataKey="BARYCENTER" 
+              stroke="#FFFFFF" 
               fillOpacity={1} 
               fill="url(#yieldGradient)" 
               strokeWidth={3}
-              name="TRINITY TOTAL"
+              name="VIRTUAL BARYCENTER"
             />
             <Line 
               type="monotone" 
@@ -101,7 +106,7 @@ export const SpectreYield = () => {
               stroke="#3B82F6" 
               dot={false}
               strokeWidth={1}
-              name="ALPHA CLUSTER"
+              name="ALPHA VERTEX"
             />
             <Line 
               type="monotone" 
@@ -109,7 +114,7 @@ export const SpectreYield = () => {
               stroke="#10B981" 
               dot={false}
               strokeWidth={1}
-              name="BETA CLUSTER"
+              name="BETA VERTEX"
             />
             <Line 
               type="monotone" 
@@ -117,7 +122,15 @@ export const SpectreYield = () => {
               stroke="#8B5CF6" 
               dot={false}
               strokeWidth={1}
-              name="GAMMA CLUSTER"
+              name="GAMMA VERTEX"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="DELTA" 
+              stroke="#F59E0B" 
+              dot={false}
+              strokeWidth={1}
+              name="DELTA VERTEX"
             />
           </ComposedChart>
         </ResponsiveContainer>
