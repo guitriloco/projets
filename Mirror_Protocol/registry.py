@@ -7,7 +7,8 @@ class ExpansionRegistry:
         self.remote_callbacks: Dict[str, List[str]] = {
             "PROTOCOL_START": [],
             "PROTOCOL_COMPLETE": [],
-            "ANOMALY_DETECTED": []
+            "ANOMALY_DETECTED": [],
+            "NECTAR_DISTILLED": []
         }
 
     def register_remote(self, event: str, url: str):
@@ -17,11 +18,12 @@ class ExpansionRegistry:
                 print(f"[REGISTRY] Remote callback registered for {event}: {url}")
 
     async def broadcast(self, event: str, data: Any):
-        print(f"[REGISTRY] Broadcasting {event} to {len(self.remote_callbacks[event])} remote nodes.")
+        print(f"[REGISTRY] Broadcasting {event} to {len(self.remote_callbacks.get(event, []))} remote nodes.")
         async with httpx.AsyncClient() as client:
             tasks = []
-            for url in self.remote_callbacks[event]:
+            for url in self.remote_callbacks.get(event, []):
                 tasks.append(client.post(url, json={"event": event, "data": data}))
+            
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for i, res in enumerate(results):
